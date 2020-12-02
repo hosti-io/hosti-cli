@@ -32,7 +32,7 @@ export const showListOfUserSites = (userSites: IUserSite[]) : void => {
         }
     });
     console.table(structDatas);
-}
+};
 
 export const showSuccess = (message: string): void => {
     console.log(green(ConsoleMessage.SUCCESS) + message + newLine);

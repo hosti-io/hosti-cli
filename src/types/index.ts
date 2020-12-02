@@ -7,33 +7,6 @@ export interface IUser {
     plan: string;
 }
 
-export interface PageModel {
-    page: string;
-    link: string
-}
-
-export interface IStatusResponse {
-    success: boolean;
-}
-
-export interface IForgotPassword {
-    email: string;
-}
-
-export interface IResetPassword {
-    password: string;
-    id: string;
-    token: string;
-}
-
-
-
-export interface IHttpErrorMessage {
-    errorMessage: string,
-    validationErrors: object,
-    errorCode: string
-}
-
 export interface IUpdateSiteDto {
     id: string;
     domain: string;
@@ -97,40 +70,12 @@ export interface IUserSite {
     link: string;
 }
 
-export interface IRemoveDeploymentRequest {
-    siteId: string;
-    deployment: string;
-}
-
-export interface IRollbackRequest {
-    siteId: string;
-    activeDeployment: string;
-    rollbackDeployment: string;
-}
-
-
 export interface IDeploySiteWithoutAuthResponse {
     domain: string;
     status: boolean;
 }
 
 
-export interface ICheckDomainAvailable {
-    domain?: string;
-    available?: boolean;
-}
-
-export interface IShortLiveToken {
-    token: string;
-}
-
 export interface IErrors {
     [key: string]: string[];
-}
-
-export interface IActivityLog {
-    action: string;
-    project: string;
-    location: string;
-    date: Date;
 }

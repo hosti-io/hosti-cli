@@ -1,5 +1,5 @@
 const getServerURL = () => {
-    return 'http://lvh.me:3500';
+    return 'https://api.hosti.io';
 };
 
 export const API_SERVER_URL = getServerURL();
