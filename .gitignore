@@ -11,6 +11,7 @@ yarn-debug.log*
 yarn-error.log*
 /.idea
 /.idea/*
+/lib
 
 /user_sites
 
