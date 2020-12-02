@@ -1,16 +1,16 @@
 import {Answer} from "../../types/answer-choise";
 import inquirer from "inquirer";
 
-export async function provideDeployLocation() : Promise<Answer> {
+export async function provideDeployLocation(): Promise<Answer> {
     return inquirer.prompt([{
         name: "deployLocation",
         type: 'input',
-        default : process.cwd(),
+        default: process.cwd(),
         message: "Please provide the path to the site directory or press ENTER to select current location: ",
     }]);
 }
 
-export async function provideProjectId() : Promise<Answer> {
+export async function provideProjectId(): Promise<Answer> {
     return inquirer.prompt([{
         name: "deployProjectId",
         type: 'input',

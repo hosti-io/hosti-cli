@@ -1,7 +1,5 @@
 import API from './APIUtils';
-import {
-    IDeploySiteWithoutAuthResponse,
-} from "../types";
+import {IDeploySiteWithoutAuthResponse,} from "../types";
 import FormData from 'form-data';
 
 

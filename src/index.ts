@@ -1,5 +1,5 @@
 import {cliCommandsExecuter} from "./dependencyResultionFactory";
-import {showSuccess, showTitleAndBanner} from "./utils/logger.util";
+import {showError, showSuccess, showTitleAndBanner} from "./utils/logger.util";
 import {getCommandQuestion} from "./cli/questions/commandQuestion";
 import yargs, {Argv} from "yargs";
 import {SupportedCommands} from "./types/answer-choise";
@@ -29,26 +29,26 @@ export async function cliCommand() {
             alias: ['key', 'k'],
             description: 'Hosti API KEY',
         }
-    }).command(['login'], "Login to Hosti",  async (yargs: Argv) => {
+    }).command(['login'], "Login to Hosti", async (yargs: Argv) => {
         if (yargs.argv.apiKey as string == null) {
-            console.error("Please pass API key via `-k` option");
+            showError("Please pass API key via `-k` option");
             process.exit(1);
         }
         await validateAuth(yargs.argv.apiKey as string);
         await saveApiKey(yargs.argv.apiKey as string);
         showSuccess("Login details saved");
     }).command(['logout'], "Logout and clear authorization information from machine", async (yargs: Argv) => {
-        await cliCommandsExecuter.executeCommand({ command: SupportedCommands.LOG_OUT });
+        await cliCommandsExecuter.executeCommand({command: SupportedCommands.LOG_OUT});
     }).command(['interactive', 'i'], "Run interactive mode", async (yargs: Argv) => {
         await prepopulateEnv(yargs.argv);
         await index();
     }).command(['sites'], "Get list of user sites", async (yargs: Argv) => {
         await prepopulateEnv(yargs.argv);
-        await cliCommandsExecuter.executeCommand({ command: SupportedCommands.LIST_OF_SITES });
+        await cliCommandsExecuter.executeCommand({command: SupportedCommands.LIST_OF_SITES});
     }).command({
         command: 'deploy',
         describe: 'Deploy new site',
-        builder:{
+        builder: {
             location: {
                 describe: 'older or file location for deploy',
                 type: 'string',
@@ -59,13 +59,17 @@ export async function cliCommand() {
                 type: 'string'
             }
         },
-        handler : async function(argv){
+        handler: async function (argv) {
             await prepopulateEnv(argv);
-            await cliCommandsExecuter.executeCommand({ command: SupportedCommands.DEPLOY_SITE, deployLocation: argv.location as string, deployProjectId: argv.projectId as string  });
+            await cliCommandsExecuter.executeCommand({
+                command: SupportedCommands.DEPLOY_SITE,
+                deployLocation: argv.location as string,
+                deployProjectId: argv.projectId as string
+            });
         }
     })
-    .demandCommand()
-    .help()
-    .wrap(72)
-    .argv;
+        .demandCommand()
+        .help()
+        .wrap(72)
+        .argv;
 }

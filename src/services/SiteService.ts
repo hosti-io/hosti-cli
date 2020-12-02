@@ -8,8 +8,7 @@ export class SiteService implements ISitesService {
         let result = await getUserSites();
         if (result == null) {
             throw new InvalidRequestException(0, "unknown", "Request failed");
-        }
-        else if (result.status != 200) {
+        } else if (result.status != 200) {
             throw new InvalidRequestException(result.status, result.statusText, JSON.stringify(result.data));
         }
         return result.data;

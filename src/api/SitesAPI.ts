@@ -1,5 +1,5 @@
 import API from './APIUtils';
-import {ICustomDomainValidation, ISiteDetails, IUpdateSiteDto, IUserSite} from '../types';
+import {ISiteDetails, IUpdateSiteDto, IUserSite} from '../types';
 
 export function getUserSites() {
     return API.get<IUserSite[]>(`/sites`);

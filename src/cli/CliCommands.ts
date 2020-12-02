@@ -1,10 +1,9 @@
 import {ICliCommands} from "./ICliCommands";
-import { siteService } from "../dependencyResultionFactory";
+import {siteService} from "../dependencyResultionFactory";
 import {showError, showInfo, showListOfUserSites, showSuccess} from "../utils/logger.util";
 import Configstore from "configstore";
-import { promises as fsPromises } from 'fs';
-import * as fs from "fs";
-import path from "path";
+import * as fs from 'fs';
+import {promises as fsPromises} from 'fs';
 import archiver from "archiver";
 import {readConfigurationFile, writeConfigurationFile} from "../utils/deploy-utils";
 import {IConfigurationFile} from "../types";
@@ -17,8 +16,8 @@ export class CliCommands implements ICliCommands {
     }
 
 
-    async deploySite(location?: string, projectId? : string) : Promise<void> {
-        let configFile : IConfigurationFile | undefined = {
+    async deploySite(location?: string, projectId?: string): Promise<void> {
+        let configFile: IConfigurationFile | undefined = {
             projectId: projectId ?? ""
         };
 
@@ -27,14 +26,14 @@ export class CliCommands implements ICliCommands {
             if (configFile == null || configFile.projectId == null) {
                 showError("You need to provide projectID via options or hosti.json file. Please read documentation.");
                 process.exit(100);
-                return ;
+                return;
             }
         }
         return new Promise(async (resolve, reject) => {
             if (configFile == null) {
                 showError("You need to provide projectID via options or hosti.json file. Please read documentation.");
                 process.exit(100);
-                return ;
+                return;
             }
             try {
                 if (await fs.existsSync(location + "/.hosti/")) {
@@ -73,7 +72,6 @@ export class CliCommands implements ICliCommands {
                         reject(err);
                     } else {
                         showError("Error during deployment: " + err);
-                        // throw error
                         reject(err);
                     }
                 });
@@ -81,8 +79,7 @@ export class CliCommands implements ICliCommands {
                 await archive.directory(location as string, false);
                 await archive.finalize();
                 await writeConfigurationFile(location, configFile);
-            }
-            finally {
+            } finally {
                 if (await fs.existsSync(location + "/.hosti/")) {
                     await fs.rmdirSync(location + "/.hosti/", {recursive: true})
                 }

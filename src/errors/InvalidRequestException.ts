@@ -1,7 +1,7 @@
 export class InvalidRequestException extends Error {
-    readonly message : string;
-    readonly statusCode : number;
-    readonly statusText : string;
+    readonly message: string;
+    readonly statusCode: number;
+    readonly statusText: string;
 
     constructor(statusCode: number, statusText: string, message: string) {
         super();
@@ -10,7 +10,7 @@ export class InvalidRequestException extends Error {
         this.statusCode = statusCode;
     }
 
-    public toString = () : string => {
+    public toString = (): string => {
         return `Request failed with status: " ${this.statusText} (HTTP: ${this.statusCode} )" and error message: ${this.message}`;
     }
 

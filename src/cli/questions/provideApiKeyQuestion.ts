@@ -1,7 +1,7 @@
 import inquirer from "inquirer";
-import {Answer, Choise, SupportedCommands} from "../../types/answer-choise";
+import {Answer} from "../../types/answer-choise";
 
-export async function provideApiKeyQuestion() : Promise<Answer> {
+export async function provideApiKeyQuestion(): Promise<Answer> {
     return inquirer.prompt([{
         name: "apiKey",
         type: 'input',

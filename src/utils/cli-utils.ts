@@ -2,11 +2,9 @@ import {provideApiKeyQuestion} from "../cli/questions/provideApiKeyQuestion";
 import {showError, showInfo, showSuccess} from "./logger.util";
 import Configstore from "configstore";
 import {authJWT} from "../api/UserAPI";
-import {Arguments, Argv} from "yargs";
-import {red} from "kleur";
-import {ConsoleMessage} from "../types/console-message";
+import {Arguments} from "yargs";
 
-export async function checkAndSaveAuthInteractive() : Promise<void> {
+export async function checkAndSaveAuthInteractive(): Promise<void> {
     const config = new Configstore("hosti-cli");
     if (process.env.HOSTI_KEY == null && config.get("api-key") == null) {
         const apiKey = await provideApiKeyQuestion();
@@ -28,7 +26,7 @@ export async function saveApiKey(token: string) {
     process.env.HOSTI_KEY = token;
 }
 
-export async function prepopulateEnv (argv: { [key in keyof Arguments<any>]: Arguments<any>[key] }) {
+export async function prepopulateEnv(argv: { [key in keyof Arguments<any>]: Arguments<any>[key] }) {
     let tokenForAuth = argv != null ? argv.apiKey as string : process.env.HOSTI_KEY;
     if (tokenForAuth == null || tokenForAuth == "" || tokenForAuth.length < 5) {
         const config = new Configstore("hosti-cli");
@@ -43,7 +41,7 @@ export async function prepopulateEnv (argv: { [key in keyof Arguments<any>]: Arg
     }
 }
 
-export async function validateAuth(key: string) : Promise<void> {
+export async function validateAuth(key: string): Promise<void> {
     showInfo("Fetching and validating auth information. Please wait...");
     let auth = await authJWT(key);
     if (auth == null || auth.status != 200) {

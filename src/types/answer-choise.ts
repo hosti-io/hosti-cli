@@ -6,7 +6,7 @@ export interface Answer {
 }
 
 export enum SupportedCommands {
-    LIST_OF_SITES ,
+    LIST_OF_SITES,
     DEPLOY_SITE,
     LOG_OUT
 }
