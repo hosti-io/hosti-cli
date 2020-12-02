@@ -1,11 +1,19 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "target": "ES2017",
+    "target": "ES6",
     "module": "commonjs",
-    "strict": true,
-    "esModuleInterop": true,
+    "lib": ["ES6", "ES2015", "ESNEXT", "dom"],
+    "outDir": "lib",
     "rootDir": "src",
-    "outDir": "dist"
-  }
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "importHelpers": true
+  },
+  "exclude": [
+    "node_modules",
+    "lib",
+    "test",
+  ]
 }
