@@ -7,6 +7,7 @@ import {
     ISiteDetails,
     IUser
 } from "../types";
+import FormData from 'form-data';
 
 export function deploySiteWithoutAuth(domain: string, site: object, token: string) {
     const formData = new FormData();
@@ -21,13 +22,14 @@ export function deploySiteWithoutAuth(domain: string, site: object, token: strin
     return API.post<IDeploySiteWithoutAuthResponse>(`/deployWithoutAuth`, formData, config);
 }
 
-export function deploySite(domain: string, site: object, user: IUser) {
+export function deploySite(domain: string, site: object) {
     const formData = new FormData();
     formData.append('site', site as any);
     formData.append('domain', domain);
     const config = {
         headers: {
-            'content-type': 'multipart/form-data'
+            'content-type': 'multipart/form-data',
+            ...formData.getHeaders()
         }
     };
     return API.post<IDeploySiteWithoutAuthResponse>(`/deploy`, formData, config);

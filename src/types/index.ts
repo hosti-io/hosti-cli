@@ -70,6 +70,10 @@ export interface ISiteDetails {
     deployments: IDeploymentResult[];
 }
 
+export interface IConfigurationFile {
+    projectId: string;
+}
+
 export interface IDeploymentResult {
     date: Date;
     deploymentId: string;

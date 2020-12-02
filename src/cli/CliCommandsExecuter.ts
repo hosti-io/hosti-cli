@@ -1,7 +1,9 @@
 import {ICliCommandsExecuter} from "./ICliCommandsExecuter";
 import {ICliCommands} from "./ICliCommands";
 import {InvalidRequestException} from "../errors/InvalidRequestException";
-import {SupportedCommands} from "../types/answer-choise";
+import {Answer, SupportedCommands} from "../types/answer-choise";
+import Configstore from "configstore";
+import {showSuccess} from "../utils/logger.util";
 
 export class CliCommandsExecuter implements ICliCommandsExecuter {
 
@@ -11,13 +13,17 @@ export class CliCommandsExecuter implements ICliCommandsExecuter {
         this.cliCommands = cliCommands;
     }
 
-    async executeCommand(command: SupportedCommands): Promise<void> {
+    async executeCommand(answer: Answer): Promise<void> {
         try {
-            console.log(command);
-            switch (command) {
+            switch (answer.command) {
                 case SupportedCommands.LIST_OF_SITES:
-                    console.log('test');
                     await this.cliCommands.getUserSites();
+                    break;
+                case SupportedCommands.LOG_OUT:
+                    await this.cliCommands.logout();
+                    break;
+                case SupportedCommands.DEPLOY_SITE:
+                    await this.cliCommands.deploySite(answer.deployLocation, answer.deployProjectId);
                     break;
                 default:
                     console.log(`Command not found`);

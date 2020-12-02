@@ -6,7 +6,7 @@ axios.defaults.withCredentials = true;
 
 axios.interceptors.request.use(function (config) {
     if (config.url != null && config.url.indexOf("/jwt-auth") == -1) {
-        config.headers.Authorization = "";
+        config.headers.Authorization =  "Bearer " + process.env.HOSTI_KEY
     }
     return config;
 });

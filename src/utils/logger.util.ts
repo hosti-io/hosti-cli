@@ -23,7 +23,7 @@ export const showWarning = (message: string): void => {
 export const showListOfUserSites = (userSites: IUserSite[]) : void => {
     const structDatas = userSites.map((arg, i) => {
         return {
-            index: i,
+            id: arg.id,
             domains: arg.domains,
             siteExpireIn: moment(arg.siteExpireAt).fromNow(),
             createdAt: moment(arg.createdAt).toLocaleString(),

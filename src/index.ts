@@ -1,28 +1,71 @@
 import {cliCommandsExecuter} from "./dependencyResultionFactory";
-import {showError, showInfo, showSuccess, showTitleAndBanner} from "./utils/logger.util";
+import {showSuccess, showTitleAndBanner} from "./utils/logger.util";
 import {getCommandQuestion} from "./cli/questions/commandQuestion";
-import {provideApiKeyQuestion} from "./cli/questions/provideApiKeyQuestion";
-import {authJWT} from "./api/UserAPI";
+import yargs, {Argv} from "yargs";
+import {SupportedCommands} from "./types/answer-choise";
+import {checkAndSaveAuthInteractive, prepopulateEnv, saveApiKey, validateAuth} from "./utils/cli-utils";
+import {provideDeployLocation, provideProjectId} from "./cli/questions/deployQuestions";
+import {readConfigurationFile} from "./utils/deploy-utils";
+
 
 export async function index(): Promise<void> {
     showTitleAndBanner();
-    if (process.env.HOSTI_KEY == null) {
-        const apiKey = await provideApiKeyQuestion();
-        if (apiKey == null || apiKey.apiKey == null || apiKey.apiKey == "") {
-            showError("You need to provide API_KEY for hosti.io first");
-            process.exit(1);
-        } else {
-            showInfo("Fetching and validating auth information. Please wait...");
-            let auth = await authJWT(apiKey.apiKey);
-            if (auth == null || auth.status != 200) {
-                showError("Please validate your api key first. Status code: " + auth?.status);
-                process.exit(1);
-            }
-            showSuccess("Auth verified");
-        }
-    }
+    await checkAndSaveAuthInteractive();
     const selectedCommand = await getCommandQuestion();
-    await cliCommandsExecuter.executeCommand(selectedCommand.command);
+    switch (selectedCommand.command) {
+        case SupportedCommands.DEPLOY_SITE:
+            selectedCommand.deployLocation = (await provideDeployLocation()).deployLocation;
+            if (await readConfigurationFile(selectedCommand.deployLocation) == null) {
+                selectedCommand.deployProjectId = (await provideProjectId()).deployProjectId;
+            }
+            break;
+    }
+    await cliCommandsExecuter.executeCommand(selectedCommand);
 }
 
-index();
+export async function cliCommand() {
+    let argv = yargs.options({
+        apiKey: {
+            alias: ['key', 'k'],
+            description: 'Hosti API KEY',
+        }
+    }).command(['login'], "Login to Hosti",  async (yargs: Argv) => {
+        if (yargs.argv.apiKey as string == null) {
+            console.error("Please pass API key via `-k` option");
+            process.exit(1);
+        }
+        await validateAuth(yargs.argv.apiKey as string);
+        await saveApiKey(yargs.argv.apiKey as string);
+        showSuccess("Login details saved");
+    }).command(['logout'], "Logout and clear authorization information from machine", async (yargs: Argv) => {
+        await cliCommandsExecuter.executeCommand({ command: SupportedCommands.LOG_OUT });
+    }).command(['interactive', 'i'], "Run interactive mode", async (yargs: Argv) => {
+        await prepopulateEnv(yargs.argv);
+        await index();
+    }).command(['sites'], "Get list of user sites", async (yargs: Argv) => {
+        await prepopulateEnv(yargs.argv);
+        await cliCommandsExecuter.executeCommand({ command: SupportedCommands.LIST_OF_SITES });
+    }).command({
+        command: 'deploy',
+        describe: 'Deploy new site',
+        builder:{
+            location: {
+                describe: 'older or file location for deploy',
+                type: 'string',
+                default: process.cwd()
+            },
+            projectId: {
+                describe: 'Project id on hosti',
+                type: 'string'
+            }
+        },
+        handler : async function(argv){
+            await prepopulateEnv(argv);
+            await cliCommandsExecuter.executeCommand({ command: SupportedCommands.DEPLOY_SITE, deployLocation: argv.location as string, deployProjectId: argv.projectId as string  });
+        }
+    })
+    .demandCommand()
+    .help()
+    .wrap(72)
+    .argv;
+}
