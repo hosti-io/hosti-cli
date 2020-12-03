@@ -9,8 +9,7 @@ inputs:
     required: true
   location:
     description: 'Directory where the index.html file located'
-    required: true
-    default: "."
+    required: false
 runs:
   using: 'node12'
-  main: '/bin/hosti deploy'
+  main: 'dist/index.js deploy'
