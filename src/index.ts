@@ -23,7 +23,7 @@ export async function index(): Promise<void> {
     await cliCommandsExecuter.executeCommand(selectedCommand);
 }
 
-export async function cliCommand() {
+export async function cliCommand(defaultDeployCommand?: boolean) {
     let argv = yargs.options({
         apiKey: {
             alias: ['key', 'k'],
@@ -46,7 +46,7 @@ export async function cliCommand() {
         await prepopulateEnv(yargs.argv);
         await cliCommandsExecuter.executeCommand({command: SupportedCommands.LIST_OF_SITES});
     }).command({
-        command: 'deploy',
+        command: defaultDeployCommand === true ? ['deploy', '$0'] : ['deploy'] ,
         describe: 'Deploy new site',
         builder: {
             location: {
