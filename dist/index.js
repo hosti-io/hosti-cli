@@ -462,7 +462,7 @@ function cliCommand(defaultDeployCommand) {
             yield cli_utils_1.prepopulateEnv(yargs.argv);
             yield dependencyResultionFactory_1.cliCommandsExecuter.executeCommand({ command: answer_choise_1.SupportedCommands.LIST_OF_SITES });
         })).command({
-            command: defaultDeployCommand === true ? ['deploy', '${0}'] : ['deploy'],
+            command: defaultDeployCommand === true ? ['deploy', '$0'] : ['deploy'],
             describe: 'Deploy new site',
             builder: {
                 location: {
