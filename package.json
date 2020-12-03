@@ -19,7 +19,8 @@
     "start": "npm run build && npm run global",
     "build": "npm run clean:some && tsc -p .",
     "global": "npm i -g && hosti",
-    "clean:some": "rm -rf ./lib "
+    "clean:some": "rm -rf ./lib ",
+    "github-build": "npm run build && ncc build /bin/hosti --license licenses.txt"
   },
   "keywords": [],
   "author": "Alex Lobanov (aleksgowalker@gmail.com)",
@@ -46,6 +47,7 @@
     "form-data": "^3.0.0"
   },
   "devDependencies": {
+    "@vercel/ncc" : "^0.25.1",
     "@types/figlet": "^1.2.1",
     "@types/archiver": "^5.1.0",
     "@types/configstore": "^4.0.0",
