@@ -1,0 +1,16 @@
+name: 'Hosti.io Publish Static Web Projects'
+description: 'Hosti.io github action to publish your static site quickly and easily!'
+inputs:
+  key:
+    description: 'API key for hosti.io'
+    required: true
+  projectId:
+    description: 'ProjectId (hosti.io subdomain) where website will be deployed'
+    required: true
+  location:
+    description: 'Directory where the index.html file located'
+    required: true
+    default: "."
+runs:
+  using: 'node12'
+  main: '/bin/hosti deploy'
