@@ -2,8 +2,6 @@ import {ICliCommands} from "./ICliCommands";
 import {siteService} from "../dependencyResultionFactory";
 import {showError, showInfo, showListOfUserSites, showSuccess} from "../utils/logger.util";
 import Configstore from "configstore";
-import * as fs from 'fs';
-import {promises as fsPromises} from 'fs';
 import archiver from "archiver";
 import {readConfigurationFile, writeConfigurationFile} from "../utils/deploy-utils";
 import {IConfigurationFile} from "../types";
@@ -47,10 +45,8 @@ export class CliCommands implements ICliCommands {
                 return;
             }
             try {
-                let outputStreamBuffer = new streamBuffers.WritableStreamBuffer({
-                    initialSize: (1000 * 1024),   // start at 1000 kilobytes.
-                    incrementAmount: (1000 * 1024) // grow by 1000 kilobytes each time buffer overflows.
-                });
+                showInfo("Start website zipping for future upload to the Hosti.io. Directory : " + formattedLocation);
+                let outputStreamBuffer = new streamBuffers.WritableStreamBuffer();
                 const archive = archiver('zip', {
                     gzip: true,
                     gzipOptions: {
@@ -85,7 +81,16 @@ export class CliCommands implements ICliCommands {
                 await archive.directory((location as string) + "/", false);
                 await archive.finalize();
                 await writeConfigurationFile(location, configFile);
-            } finally {
+            }
+            catch (e) {
+                showError("Failed site deployment with unexpected error");
+                if (e != null) {
+                    showError(e);
+                    showError(e.stack);
+                }
+                throw e;
+            }
+            finally {
                 //if (await fs.existsSync(location + "/.hosti/")) {
                 //    await fs.rmdirSync(location + "/.hosti/", {recursive: true})
                // }
