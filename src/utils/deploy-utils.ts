@@ -14,5 +14,7 @@ export async function readConfigurationFile(deployLocation?: string): Promise<IC
 }
 
 export async function writeConfigurationFile(deployLocation?: string, config?: IConfigurationFile): Promise<void> {
+    if (process.env.CI || process.env.CONTINUOUS_INTEGRATION || process.env.BUILD_NUMBER)
+        return; //ignore writing in CI env
     await fsPromises.writeFile(deployLocation + "/hosti.json", JSON.stringify(config, null, 4), {encoding: "utf8"});
 }

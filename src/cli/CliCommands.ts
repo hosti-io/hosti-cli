@@ -8,6 +8,7 @@ import archiver from "archiver";
 import {readConfigurationFile, writeConfigurationFile} from "../utils/deploy-utils";
 import {IConfigurationFile} from "../types";
 import {deploySite} from "../api/DeployAPI";
+import streamBuffers from 'stream-buffers';
 
 export class CliCommands implements ICliCommands {
     async getUserSites(): Promise<void> {
@@ -17,42 +18,51 @@ export class CliCommands implements ICliCommands {
 
 
     async deploySite(location?: string, projectId?: string): Promise<void> {
+        if (location == null) {
+            showError("You need to provide path to the website that you want to deploy");
+            return;
+        }
         let configFile: IConfigurationFile | undefined = {
             projectId: projectId ?? ""
         };
-
+        let formattedLocation = location;
+        if (!formattedLocation.startsWith("/")){
+            formattedLocation = "./" + formattedLocation;
+        }
+        if (formattedLocation.endsWith("/")) {
+            formattedLocation = formattedLocation.slice(0, formattedLocation.length - 1);
+        }
         if (projectId == null) {
-            configFile = await readConfigurationFile(location);
+            configFile = await readConfigurationFile(formattedLocation);
             if (configFile == null || configFile.projectId == null) {
-                showError("You need to provide projectID via options or hosti.json file. Please read documentation.");
+                showError("You need to provide projectId via options or hosti.json file. Please read documentation.");
                 process.exit(100);
                 return;
             }
         }
         return new Promise(async (resolve, reject) => {
             if (configFile == null) {
-                showError("You need to provide projectID via options or hosti.json file. Please read documentation.");
+                showError("You need to provide projectId via options or hosti.json file. Please read documentation.");
                 process.exit(100);
                 return;
             }
             try {
-                if (await fs.existsSync(location + "/.hosti/")) {
-                    await fs.rmdirSync(location + "/.hosti/", {recursive: true})
-                }
-                await fsPromises.mkdir(location + "/.hosti/");
-                const output = fs.createWriteStream(location + "/.hosti/" + '/deploy.zip');
+                let outputStreamBuffer = new streamBuffers.WritableStreamBuffer({
+                    initialSize: (1000 * 1024),   // start at 1000 kilobytes.
+                    incrementAmount: (1000 * 1024) // grow by 1000 kilobytes each time buffer overflows.
+                });
                 const archive = archiver('zip', {
                     gzip: true,
                     gzipOptions: {
                         level: 9
                     }
                 });
-                output.on('close', async function () {
+                outputStreamBuffer.on('finish', async function () {
                     if (configFile == null)
                         return;
                     showInfo("Starting site uploading...");
-                    const file = fs.createReadStream(location + "/.hosti/" + '/deploy.zip');
-                    let result = await deploySite(configFile.projectId, file);
+
+                    let result = await deploySite(configFile.projectId, outputStreamBuffer.getContents() as Buffer);
                     if (result.status == 200) {
                         showSuccess("Success deployment");
                         console.table(result.data);
@@ -61,10 +71,6 @@ export class CliCommands implements ICliCommands {
                         console.table(result.data)
                     }
                     resolve();
-                });
-                output.on('end', function () {
-                    console.log('Data has been drained');
-                    reject("Data has been drained");
                 });
                 archive.on('warning', function (err) {
                     if (err.code === 'ENOENT') {
@@ -75,14 +81,14 @@ export class CliCommands implements ICliCommands {
                         reject(err);
                     }
                 });
-                archive.pipe(output);
-                await archive.directory(location as string, false);
+                archive.pipe(outputStreamBuffer);
+                await archive.directory((location as string) + "/", false);
                 await archive.finalize();
                 await writeConfigurationFile(location, configFile);
             } finally {
-                if (await fs.existsSync(location + "/.hosti/")) {
-                    await fs.rmdirSync(location + "/.hosti/", {recursive: true})
-                }
+                //if (await fs.existsSync(location + "/.hosti/")) {
+                //    await fs.rmdirSync(location + "/.hosti/", {recursive: true})
+               // }
             }
         });
     }

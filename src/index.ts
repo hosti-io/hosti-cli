@@ -15,7 +15,18 @@ export async function index(): Promise<void> {
     switch (selectedCommand.command) {
         case SupportedCommands.DEPLOY_SITE:
             selectedCommand.deployLocation = (await provideDeployLocation()).deployLocation;
-            if (await readConfigurationFile(selectedCommand.deployLocation) == null) {
+            if (selectedCommand.deployLocation == null) {
+                showError("You need to provide website location to continue");
+                return;
+            }
+            let formattedLocation = selectedCommand.deployLocation;
+            if (!formattedLocation.startsWith("/")){
+                formattedLocation = "./" + formattedLocation;
+            }
+            if (formattedLocation.endsWith("/")) {
+                formattedLocation = formattedLocation.slice(0, formattedLocation.length - 1);
+            }
+            if (await readConfigurationFile(formattedLocation) == null) {
                 selectedCommand.deployProjectId = (await provideProjectId()).deployProjectId;
             }
             break;
