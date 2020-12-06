@@ -20,10 +20,10 @@ export async function index(): Promise<void> {
                 return;
             }
             let formattedLocation = selectedCommand.deployLocation;
-            if (!formattedLocation.startsWith("/")){
-                formattedLocation = "./" + formattedLocation;
+            if (formattedLocation != "." && !formattedLocation.startsWith("/")){
+                formattedLocation = "/" + formattedLocation;
             }
-            if (formattedLocation.endsWith("/")) {
+            if (formattedLocation != "." && formattedLocation.endsWith("/")) {
                 formattedLocation = formattedLocation.slice(0, formattedLocation.length - 1);
             }
             if (await readConfigurationFile(formattedLocation) == null) {

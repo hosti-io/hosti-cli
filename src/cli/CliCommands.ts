@@ -24,10 +24,10 @@ export class CliCommands implements ICliCommands {
             projectId: projectId ?? ""
         };
         let formattedLocation = location;
-        if (!formattedLocation.startsWith("/")){
-            formattedLocation = "./" + formattedLocation;
+        if (formattedLocation != "." && !formattedLocation.startsWith("/")){
+            formattedLocation = "/" + formattedLocation;
         }
-        if (formattedLocation.endsWith("/")) {
+        if (formattedLocation != "." && formattedLocation.endsWith("/")) {
             formattedLocation = formattedLocation.slice(0, formattedLocation.length - 1);
         }
         if (projectId == null) {
