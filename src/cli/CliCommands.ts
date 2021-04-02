@@ -2,13 +2,24 @@ import {ICliCommands} from "./ICliCommands";
 import {siteService} from "../dependencyResultionFactory";
 import {showError, showInfo, showListOfUserSites, showSuccess} from "../utils/logger.util";
 import Configstore from "configstore";
-import archiver from "archiver";
 import {readConfigurationFile, writeConfigurationFile} from "../utils/deploy-utils";
 import {IConfigurationFile} from "../types";
-import {deploySite} from "../api/DeployAPI";
-import streamBuffers from 'stream-buffers';
+import {IHashProviderService} from "../services/IHashProviderService";
+import {IDeploySiteService} from "../services/IDeploySiteService";
+import {HashProviderService} from "../services/HashProviderService/HashProviderService";
+import {DeploySiteService} from "../services/DeploySiteService/DeploySiteService";
 
 export class CliCommands implements ICliCommands {
+
+    protected hashProvider: IHashProviderService;
+    protected deploySiteService: IDeploySiteService;
+
+    constructor() {
+        this.hashProvider = new HashProviderService();
+        this.deploySiteService = new DeploySiteService(this.hashProvider);
+    }
+
+
     async getUserSites(): Promise<void> {
         let siteResult = await siteService.getUserSites();
         showListOfUserSites(siteResult);
@@ -45,41 +56,12 @@ export class CliCommands implements ICliCommands {
                 return;
             }
             try {
-                showInfo("Start website zipping for future upload to the Hosti.io. Directory : " + formattedLocation);
-                let outputStreamBuffer = new streamBuffers.WritableStreamBuffer();
-                const archive = archiver('zip', {
-                    gzip: true,
-                    gzipOptions: {
-                        level: 9
-                    }
-                });
-                outputStreamBuffer.on('finish', async function () {
-                    if (configFile == null)
-                        return;
-                    showInfo("Starting site uploading...");
+                showInfo("Start website uploading: " + formattedLocation);
 
-                    let result = await deploySite(configFile.projectId, outputStreamBuffer.getContents() as Buffer);
-                    if (result.status == 200) {
-                        showSuccess("Success deployment");
-                        console.table(result.data);
-                    } else {
-                        showError("Something went wrong during deployment. Status Code:  " + result.status);
-                        console.table(result.data)
-                    }
-                    resolve();
+                await this.deploySiteService.deployFolder(configFile.projectId, formattedLocation, undefined, undefined, (progress) => {
+                    showInfo("Upload progress: " + progress + "%");
                 });
-                archive.on('warning', function (err) {
-                    if (err.code === 'ENOENT') {
-                        showError("Files to deploy was not found...");
-                        reject(err);
-                    } else {
-                        showError("Error during deployment: " + err);
-                        reject(err);
-                    }
-                });
-                archive.pipe(outputStreamBuffer);
-                await archive.directory((location as string) + "/", false);
-                await archive.finalize();
+
                 await writeConfigurationFile(location, configFile);
             }
             catch (e) {
