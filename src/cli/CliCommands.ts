@@ -47,8 +47,13 @@ export class CliCommands implements ICliCommands {
                 showError("You need to provide projectId via options or hosti.json file. Please read documentation.");
                 process.exit(100);
                 return;
+            } else {
+                showInfo("Deploy folder to the " + configFile.projectId + " project. ProjectId fetched from hosti.json config file");
             }
+        } else {
+            showInfo("Deploy folder to the " + projectId + " project");
         }
+
         return new Promise(async (resolve, reject) => {
             if (configFile == null) {
                 showError("You need to provide projectId via options or hosti.json file. Please read documentation.");
@@ -61,8 +66,11 @@ export class CliCommands implements ICliCommands {
                 await this.deploySiteService.deployFolder(configFile.projectId, formattedLocation, undefined, undefined, (progress) => {
                     showInfo("Upload progress: " + progress + "%");
                 });
-
                 await writeConfigurationFile(location, configFile);
+
+                showSuccess("Complete site uploading. Website will be live shortly");
+                showSuccess("URL: https://" + configFile.projectId + ".hosti.site/");
+
             }
             catch (e) {
                 showError("Failed site deployment with unexpected error");
@@ -70,12 +78,9 @@ export class CliCommands implements ICliCommands {
                     showError(e);
                     showError(e.stack);
                 }
-                throw e;
             }
             finally {
-                //if (await fs.existsSync(location + "/.hosti/")) {
-                //    await fs.rmdirSync(location + "/.hosti/", {recursive: true})
-               // }
+
             }
         });
     }

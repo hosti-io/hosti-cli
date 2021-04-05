@@ -13,7 +13,7 @@ export const showTitleAndBanner = (): void => {
 };
 
 export const showError = (message: string | Error): void => {
-    console.error(red(ConsoleMessage.ERROR) + message);
+    console.error(red(ConsoleMessage.ERROR) + message.toString());
 };
 
 export const showWarning = (message: string): void => {

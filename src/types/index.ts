@@ -87,7 +87,6 @@ export interface IDeployFiles {
     name: string;
     hash: string;
     contentType?: string;
-    fileInstance?: File;
 }
 
 export interface IUserSite {

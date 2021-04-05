@@ -24,6 +24,7 @@ export async function saveApiKey(token: string) {
     const config = new Configstore("hosti-cli");
     config.set("api-key", token);
     process.env.HOSTI_KEY = token;
+    showSuccess("API Key saved");
 }
 
 export async function prepopulateEnv(argv: { [key in keyof Arguments<any>]: Arguments<any>[key] }) {

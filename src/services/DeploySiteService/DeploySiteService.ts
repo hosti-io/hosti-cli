@@ -32,9 +32,9 @@ export class DeploySiteService implements IDeploySiteService {
         const promises = new Array<Promise<boolean>>();
         for (const file of result.data.filesToUpload) {
             const originalFile = deployRequest.files.find((arg) => arg.hash === file.hash);
-            if (originalFile == null || originalFile.fileInstance == null)
+            if (originalFile == null)
                 throw Error("Upload file not found.");
-            const result = uploadFileToStorage(originalFile.fileInstance, file.url, file.contentType);
+            const result = uploadFileToStorage(originalFile.name, file.url, file.contentType);
             promises.push(result);
         }
 
@@ -81,7 +81,7 @@ export class DeploySiteService implements IDeploySiteService {
             name: relativePath,
             fileInstance: file,
             contentType: mime.getType(name) as string,
-            hash: await this.hashProviderService.fileHash(file)
+            hash: await this.hashProviderService.fileHash(relativePath)
         };
         return deployFile;
     }
@@ -113,28 +113,24 @@ export class DeploySiteService implements IDeploySiteService {
             const promises = Array<Promise<IDeployFiles | undefined>>();
             glob(folder + "/**/*", async (err, res) => {
                 for (let file of res) {
+                    if (fs.lstatSync(file).isDirectory())
+                        continue;
                     promises.push(this.getDeployParamsForFile(file))
                 }
+                const result = await Promise.all(promises);
+                resolve(result)
             });
-            const result = await Promise.all(promises);
-            resolve(result)
         }));
     }
 
     async getDeployParamsForFile(filePath: string) : Promise<IDeployFiles | undefined> {
-        return new Promise(((resolve, reject) => {
-            const fileName = path.basename(filePath);
-            fs.readFile(filePath, async (err, buffer) => {
-                const fileObject = new File([buffer], fileName);
-                let deployFile = {
-                    name: filePath,
-                    fileInstance: fileObject,
-                    contentType: mime.getType(fileName) as string,
-                    hash: await this.hashProviderService.fileHash(fileObject)
-                };
-                resolve(deployFile);
-            });
-        }));
+        const fileName = path.basename(filePath);
+        let deployFile = {
+            name: filePath,
+            contentType: mime.getType(fileName) as string,
+            hash: await this.hashProviderService.fileHash(filePath)
+        };
+        return deployFile;
     }
 
     getDeployFiles(archive: File): Promise<(IDeployFiles | undefined)[]> {
@@ -161,16 +157,15 @@ export class DeploySiteService implements IDeploySiteService {
             deployRequest.token = token;
         }
         const result = await deploySiteRequest(deployRequest);
-
         if (result.data == null || result.status < 200 || result.status > 300)
-            throw new Error("Deployment failed. Please try again later");
+            throw new Error("Deployment failed. Please try again later. Error message: " + result.data);
 
         const promises = new Array<Promise<boolean>>();
         for (const file of result.data.filesToUpload) {
             const originalFile = deployRequest.files.find((arg) => arg.hash === file.hash);
-            if (originalFile == null || originalFile.fileInstance == null)
+            if (originalFile == null)
                 throw Error("Upload file not found.");
-            const result = uploadFileToStorage(originalFile.fileInstance, file.url, file.contentType);
+            const result = uploadFileToStorage(originalFile.name, file.url, file.contentType);
             promises.push(result);
         }
 
