@@ -53,6 +53,42 @@ export interface IDeploymentResult {
     ownerId: string;
 }
 
+export interface ICompleteDeploySiteResponse {
+    domain: string;
+    status: boolean;
+    deploymentId: string;
+}
+
+
+export interface ICompleteDeploySiteRequest {
+    deploymentId: string;
+    domain: string;
+    deploymentFiles: IDeployFiles[]
+    updatedFiles: IDeployFiles[]
+    token?: string;
+}
+
+export interface IDeploySiteWithoutAuthResponse {
+    domain: string;
+    status: boolean;
+    deploymentId: string;
+    filesToUpload: IFilesSignedUrls[];
+}
+
+
+export interface IDeploySite {
+    token?: string;
+    domain: string;
+    customDomain?: string;
+    files: IDeployFiles[]
+}
+
+export interface IDeployFiles {
+    name: string;
+    hash: string;
+    contentType?: string;
+}
+
 export interface IUserSite {
     id: string;
     domain: string;
@@ -70,9 +106,11 @@ export interface IUserSite {
     link: string;
 }
 
-export interface IDeploySiteWithoutAuthResponse {
-    domain: string;
-    status: boolean;
+export interface IFilesSignedUrls {
+    file: string;
+    hash: string;
+    contentType: string;
+    url: string;
 }
 
 

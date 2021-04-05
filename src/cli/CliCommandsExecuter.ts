@@ -24,6 +24,7 @@ export class CliCommandsExecuter implements ICliCommandsExecuter {
                     break;
                 case SupportedCommands.DEPLOY_SITE:
                     showInfo("Start site deployment preparation...");
+                    showInfo(`Start project deploy from " ${answer.deployLocation} " location`);
                     await this.cliCommands.deploySite(answer.deployLocation, answer.deployProjectId);
                     break;
                 default:

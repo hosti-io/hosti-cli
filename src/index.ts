@@ -63,7 +63,8 @@ export async function cliCommand(defaultDeployCommand?: boolean) {
             location: {
                 describe: 'older or file location for deploy',
                 type: 'string',
-                default: process.cwd()
+                demandOption: true,
+                default: process.cwd(),
             },
             projectId: {
                 describe: 'Project id on hosti',

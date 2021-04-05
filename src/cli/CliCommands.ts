@@ -2,13 +2,24 @@ import {ICliCommands} from "./ICliCommands";
 import {siteService} from "../dependencyResultionFactory";
 import {showError, showInfo, showListOfUserSites, showSuccess} from "../utils/logger.util";
 import Configstore from "configstore";
-import archiver from "archiver";
 import {readConfigurationFile, writeConfigurationFile} from "../utils/deploy-utils";
 import {IConfigurationFile} from "../types";
-import {deploySite} from "../api/DeployAPI";
-import streamBuffers from 'stream-buffers';
+import {IHashProviderService} from "../services/IHashProviderService";
+import {IDeploySiteService} from "../services/IDeploySiteService";
+import {HashProviderService} from "../services/HashProviderService/HashProviderService";
+import {DeploySiteService} from "../services/DeploySiteService/DeploySiteService";
 
 export class CliCommands implements ICliCommands {
+
+    protected hashProvider: IHashProviderService;
+    protected deploySiteService: IDeploySiteService;
+
+    constructor() {
+        this.hashProvider = new HashProviderService();
+        this.deploySiteService = new DeploySiteService(this.hashProvider);
+    }
+
+
     async getUserSites(): Promise<void> {
         let siteResult = await siteService.getUserSites();
         showListOfUserSites(siteResult);
@@ -36,8 +47,13 @@ export class CliCommands implements ICliCommands {
                 showError("You need to provide projectId via options or hosti.json file. Please read documentation.");
                 process.exit(100);
                 return;
+            } else {
+                showInfo("Deploy folder to the " + configFile.projectId + " project. ProjectId fetched from hosti.json config file");
             }
+        } else {
+            showInfo("Deploy folder to the " + projectId + " project");
         }
+
         return new Promise(async (resolve, reject) => {
             if (configFile == null) {
                 showError("You need to provide projectId via options or hosti.json file. Please read documentation.");
@@ -45,42 +61,16 @@ export class CliCommands implements ICliCommands {
                 return;
             }
             try {
-                showInfo("Start website zipping for future upload to the Hosti.io. Directory : " + formattedLocation);
-                let outputStreamBuffer = new streamBuffers.WritableStreamBuffer();
-                const archive = archiver('zip', {
-                    gzip: true,
-                    gzipOptions: {
-                        level: 9
-                    }
-                });
-                outputStreamBuffer.on('finish', async function () {
-                    if (configFile == null)
-                        return;
-                    showInfo("Starting site uploading...");
+                showInfo("Start website uploading: " + formattedLocation);
 
-                    let result = await deploySite(configFile.projectId, outputStreamBuffer.getContents() as Buffer);
-                    if (result.status == 200) {
-                        showSuccess("Success deployment");
-                        console.table(result.data);
-                    } else {
-                        showError("Something went wrong during deployment. Status Code:  " + result.status);
-                        console.table(result.data)
-                    }
-                    resolve();
+                await this.deploySiteService.deployFolder(configFile.projectId, formattedLocation, undefined, undefined, (progress) => {
+                    showInfo("Upload progress: " + progress + "%");
                 });
-                archive.on('warning', function (err) {
-                    if (err.code === 'ENOENT') {
-                        showError("Files to deploy was not found...");
-                        reject(err);
-                    } else {
-                        showError("Error during deployment: " + err);
-                        reject(err);
-                    }
-                });
-                archive.pipe(outputStreamBuffer);
-                await archive.directory((location as string) + "/", false);
-                await archive.finalize();
                 await writeConfigurationFile(location, configFile);
+
+                showSuccess("Complete site uploading. Website will be live shortly");
+                showSuccess("URL: https://" + configFile.projectId + ".hosti.site/");
+
             }
             catch (e) {
                 showError("Failed site deployment with unexpected error");
@@ -88,12 +78,9 @@ export class CliCommands implements ICliCommands {
                     showError(e);
                     showError(e.stack);
                 }
-                throw e;
             }
             finally {
-                //if (await fs.existsSync(location + "/.hosti/")) {
-                //    await fs.rmdirSync(location + "/.hosti/", {recursive: true})
-               // }
+
             }
         });
     }
