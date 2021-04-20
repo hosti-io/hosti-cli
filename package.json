@@ -1,6 +1,6 @@
 {
   "name": "hosti-cli",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Deploy your sites and web projects easily. Powered by hosti.io",
   "main": "lib/index.js",
   "bin": {

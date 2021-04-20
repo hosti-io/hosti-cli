@@ -23,9 +23,13 @@ export class CliCommandsExecuter implements ICliCommandsExecuter {
                     await this.cliCommands.logout();
                     break;
                 case SupportedCommands.DEPLOY_SITE:
+                    let deployLocation = answer.deployLocation;
+                    if (deployLocation == null || deployLocation.length == 0) {
+                        deployLocation = process.cwd();
+                    }
                     showInfo("Start site deployment preparation...");
-                    showInfo(`Start project deploy from " ${answer.deployLocation} " location`);
-                    await this.cliCommands.deploySite(answer.deployLocation, answer.deployProjectId);
+                    showInfo(`Start project deploy from " ${deployLocation} " location`);
+                    await this.cliCommands.deploySite(deployLocation, answer.deployProjectId);
                     break;
                 default:
                     showError(`Command not found`);
