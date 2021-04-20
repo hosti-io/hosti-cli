@@ -1,5 +1,5 @@
 import {IDeploySiteService} from "../IDeploySiteService";
-import {ICompleteDeploySiteResponse, IDeployFiles, IDeploySite, IUser} from "../../types";
+import {ICompleteDeploySiteResponse, IDeployFiles, IDeploySite, IFilesSignedUrls, IUser} from "../../types";
 import {IHashProviderService} from "../IHashProviderService";
 import JSZip from "jszip";
 import {completeDeploySiteRequest, deploySiteRequest, uploadFileToStorage} from "../../api/DeployAPI";
@@ -48,7 +48,7 @@ export class DeploySiteService implements IDeploySiteService {
             deploymentId: result.data.deploymentId,
             domain: deployRequest.domain,
             token: token,
-            updatedFiles: result.data.filesToUpload.map((arg) => {
+            updatedFiles: result.data.filesToUpload.map((arg: IFilesSignedUrls) => {
                 return {name: arg.file, hash: arg.hash, contentType: arg.contentType}
             }),
             deploymentFiles: deployRequest.files
@@ -74,7 +74,7 @@ export class DeploySiteService implements IDeploySiteService {
     }
 
 
-    async processFile(zipEntry: JSZip.JSZipObject, relativePath: string, name: string): Promise<IDeployFiles> {
+    async processZipFile(zipEntry: JSZip.JSZipObject, relativePath: string, name: string): Promise<IDeployFiles> {
         let fileData = await zipEntry.async("blob");
         let file = new File([fileData], zipEntry.name);
         let deployFile = {
@@ -85,6 +85,17 @@ export class DeploySiteService implements IDeploySiteService {
         };
         return deployFile;
     }
+
+    async processSingleFile(file: File, relativePath: string, name: string): Promise<IDeployFiles> {
+        let deployFile = {
+            name: relativePath,
+            fileInstance: file,
+            contentType: mime.getType(name) as string,
+            hash: await this.hashProviderService.fileHash(relativePath)
+        };
+        return deployFile;
+    }
+
 
     async getDeployParamsForFolder(domain: string, folder: string): Promise<IDeploySite | null> {
         let filesToDeploy = await this.getDeployFilesInFolder(folder);
@@ -111,11 +122,19 @@ export class DeploySiteService implements IDeploySiteService {
     getDeployFilesInFolder(folder: string): Promise<(IDeployFiles | undefined)[]> {
         return new Promise((async (resolve, reject) => {
             const promises = Array<Promise<IDeployFiles | undefined>>();
-            glob(folder + "/**/*", async (err, res) => {
+            glob(folder + "/**/*", {  mark: true, nodir: true }, async (err, res) => {
+                if (err) {
+                    console.error("Error during fetching files in the folder", err.message);
+                    return reject(err);
+                }
                 for (let file of res) {
-                    if (fs.lstatSync(file).isDirectory())
-                        continue;
-                    promises.push(this.getDeployParamsForFile(file))
+                    fs.access(file, fs.constants.R_OK, (err) => {
+                        if (err) {
+                            console.warn("Not able to read the file. Ignore this file for deployment: " + file);
+                        } else {
+                            promises.push(this.getDeployParamsForFile(file))
+                        }
+                    });
                 }
                 const result = await Promise.all(promises);
                 resolve(result)
@@ -133,21 +152,36 @@ export class DeploySiteService implements IDeploySiteService {
         return deployFile;
     }
 
-    getDeployFiles(archive: File): Promise<(IDeployFiles | undefined)[]> {
+    async getDeployFiles(archive: File): Promise<(IDeployFiles | undefined)[]> {
+        switch (archive.type) {
+            case "text/html":
+                return this.getDeployedIndex(archive)
+            default:
+                return this.getDeployedZip(archive)
+        }
+    }
+
+    async getDeployedIndex(archive: File) : Promise<(IDeployFiles | undefined)[]> {
+        let array: (IDeployFiles | undefined)[] = [];
+        let indexFile = await this.processSingleFile(archive, "index.html", "index.html");
+        array.push(indexFile);
+        return array;
+    }
+
+    getDeployedZip(archive: File) : Promise<(IDeployFiles | undefined)[]> {
         return new Promise(((resolve, reject) => {
             const promises = Array<Promise<IDeployFiles | undefined>>();
             JSZip.loadAsync(archive).then(async (zip) => {
                 zip.forEach((relativePath, zipEntry) => {
                     if (zipEntry.dir)
                         return;
-                    promises.push(this.processFile(zipEntry, relativePath, zipEntry.name));
+                    promises.push(this.processZipFile(zipEntry, relativePath, zipEntry.name));
                 });
                 const result = await Promise.all(promises);
                 resolve(result);
             });
         }));
     }
-
     async deployFolder(domain: string, folderPath: string, token?: string, user?: IUser, progress?: (progress: number) => void): Promise<ICompleteDeploySiteResponse> {
         const deployRequest = await this.getDeployParamsForFolder(domain, folderPath);
         if (deployRequest == null)
@@ -179,7 +213,7 @@ export class DeploySiteService implements IDeploySiteService {
             deploymentId: result.data.deploymentId,
             domain: deployRequest.domain,
             token: token,
-            updatedFiles: result.data.filesToUpload.map((arg) => {
+            updatedFiles: result.data.filesToUpload.map((arg: IFilesSignedUrls) => {
                 return {name: arg.file, hash: arg.hash, contentType: arg.contentType}
             }),
             deploymentFiles: deployRequest.files
