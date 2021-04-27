@@ -7,6 +7,7 @@ import mime from "mime";
 import {glob} from "glob";
 import path from "path";
 import * as fs from "fs";
+import {showInfo} from "../../utils/logger.util";
 
 export class DeploySiteService implements IDeploySiteService {
 
@@ -21,6 +22,10 @@ export class DeploySiteService implements IDeploySiteService {
         if (deployRequest == null)
             throw new Error("Invalid deploy params");
 
+        if (deployRequest.files == null || deployRequest.files.length == 0) {
+            throw new Error("No files to upload selected. Please verify input first");
+        }
+
         if (token != null && user == null) {
             deployRequest.token = token;
         }
@@ -30,12 +35,17 @@ export class DeploySiteService implements IDeploySiteService {
             throw new Error("Deployment failed. Please try again later");
 
         const promises = new Array<Promise<boolean>>();
-        for (const file of result.data.filesToUpload) {
-            const originalFile = deployRequest.files.find((arg) => arg.hash === file.hash);
-            if (originalFile == null)
-                throw Error("Upload file not found.");
-            const result = uploadFileToStorage(originalFile.name, file.url, file.contentType);
-            promises.push(result);
+
+        if (result.data.filesToUpload.length == 0) {
+            showInfo("Nothing for upload");
+        } else {
+            for (const file of result.data.filesToUpload) {
+                const originalFile = deployRequest.files.find((arg) => arg.hash === file.hash);
+                if (originalFile == null)
+                    throw Error("Upload file not found.");
+                const result = uploadFileToStorage(originalFile.name, file.url, file.contentType);
+                promises.push(result);
+            }
         }
 
         if (progress != null) {
@@ -128,18 +138,30 @@ export class DeploySiteService implements IDeploySiteService {
                     return reject(err);
                 }
                 for (let file of res) {
-                    fs.access(file, fs.constants.R_OK, (err) => {
-                        if (err) {
-                            console.warn("Not able to read the file. Ignore this file for deployment: " + file);
-                        } else {
-                            promises.push(this.getDeployParamsForFile(file))
-                        }
-                    });
+                    promises.push(this.checkAccessAndReturnFilePromise(file));
                 }
                 const result = await Promise.all(promises);
-                resolve(result)
+                if (result != null && result.length > 0) {
+                    resolve(result.filter((arg) => arg != undefined));
+                } else {
+                    reject("No files for deployment")
+                }
             });
         }));
+    }
+
+
+    async checkAccessAndReturnFilePromise(file: string) : Promise<IDeployFiles | undefined> {
+        return new Promise((resolve, reject) => {
+            fs.access(file, fs.constants.R_OK, (err) => {
+                if (err) {
+                    console.warn("Not able to read the file. Ignore this file for deployment: " + file);
+                    resolve(undefined);
+                } else {
+                    resolve(this.getDeployParamsForFile(file))
+                }
+            });
+        });
     }
 
     async getDeployParamsForFile(filePath: string) : Promise<IDeployFiles | undefined> {
