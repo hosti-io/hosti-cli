@@ -25,7 +25,8 @@ export function uploadFileToStorage(file: string, url: string, contentType: stri
         axios.put(url, input, {
             withCredentials: false,
             headers: {
-                "Content-Type": contentType ?? "text/plain"
+                "Content-Type": contentType ?? "text/plain",
+                "Cache-Control": 'public, max-age=0'
             }
         }).then((res) => {
             resolve(true);

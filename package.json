@@ -1,6 +1,6 @@
 {
   "name": "hosti-cli",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Deploy your sites and web projects easily. Powered by hosti.io",
   "main": "lib/index.js",
   "bin": {
@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/hosti-io/hosti-cli#readme",
   "dependencies": {
-    "axios": "0.21.0",
+    "axios": "^0.21.1",
     "jszip": "^3.6.0",
     "mime": "^2.5.2",
     "configstore": "^5.0.1",
