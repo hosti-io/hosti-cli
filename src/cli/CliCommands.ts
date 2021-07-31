@@ -26,7 +26,7 @@ export class CliCommands implements ICliCommands {
     }
 
 
-    async deploySite(location?: string, projectId?: string): Promise<void> {
+    async deploySite(location?: string, projectId?: string, isSpaApplication?: boolean): Promise<void> {
         if (location == null) {
             showError("You need to provide path to the website that you want to deploy");
             return;
@@ -63,7 +63,7 @@ export class CliCommands implements ICliCommands {
             try {
                 showInfo("Start website uploading: " + formattedLocation);
 
-                await this.deploySiteService.deployFolder(configFile.projectId, formattedLocation, undefined, undefined, (progress) => {
+                await this.deploySiteService.deployFolder(configFile.projectId,  formattedLocation, isSpaApplication ?? false,  undefined, undefined, (progress) => {
                     showInfo("Upload progress: " + progress + "%");
                 });
                 await writeConfigurationFile(location, configFile);

@@ -3,5 +3,5 @@ export interface ICliCommands {
 
     logout(): Promise<void>;
 
-    deploySite(location?: string, projectId?: string): Promise<void>;
+    deploySite(location?: string, projectId?: string, isSpaApplication?:boolean): Promise<void>;
 }

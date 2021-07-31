@@ -80,6 +80,7 @@ export interface IDeploySite {
     token?: string;
     domain: string;
     customDomain?: string;
+    isSpaApplication: boolean;
     files: IDeployFiles[]
 }
 

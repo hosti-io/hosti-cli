@@ -17,8 +17,8 @@ export class DeploySiteService implements IDeploySiteService {
         this.hashProviderService = hashProviderService;
     }
 
-    async deploySite(domain: string, archive: File, token?: string, user?: IUser, progress?: (progress: number) => void): Promise<ICompleteDeploySiteResponse> {
-        const deployRequest = await this.getDeployParams(domain, archive);
+    async deploySite(domain: string, archive: File, isSpaApplication: boolean, token?: string, user?: IUser, progress?: (progress: number) => void): Promise<ICompleteDeploySiteResponse> {
+        const deployRequest = await this.getDeployParams(domain, isSpaApplication, archive);
         if (deployRequest == null)
             throw new Error("Invalid deploy params");
 
@@ -107,23 +107,25 @@ export class DeploySiteService implements IDeploySiteService {
     }
 
 
-    async getDeployParamsForFolder(domain: string, folder: string): Promise<IDeploySite | null> {
+    async getDeployParamsForFolder(domain: string, isSpaApplication: boolean, folder: string): Promise<IDeploySite | null> {
         let filesToDeploy = await this.getDeployFilesInFolder(folder);
         if (filesToDeploy == null)
             return null;
         let result = {
             domain: domain,
+            isSpaApplication: isSpaApplication,
             files: filesToDeploy as IDeployFiles[]
         }
         return result;
     }
 
-    async getDeployParams(domain: string, archive: File): Promise<IDeploySite | null> {
+    async getDeployParams(domain: string, isSpaApplication: boolean, archive: File): Promise<IDeploySite | null> {
         let filesToDeploy = await this.getDeployFiles(archive);
         if (filesToDeploy == null)
             return null;
         let result = {
             domain: domain,
+            isSpaApplication: isSpaApplication,
             files: filesToDeploy as IDeployFiles[]
         }
         return result;
@@ -204,8 +206,8 @@ export class DeploySiteService implements IDeploySiteService {
             });
         }));
     }
-    async deployFolder(domain: string, folderPath: string, token?: string, user?: IUser, progress?: (progress: number) => void): Promise<ICompleteDeploySiteResponse> {
-        const deployRequest = await this.getDeployParamsForFolder(domain, folderPath);
+    async deployFolder(domain: string, folderPath: string, isSpaApplication: boolean, token?: string, user?: IUser, progress?: (progress: number) => void): Promise<ICompleteDeploySiteResponse> {
+        const deployRequest = await this.getDeployParamsForFolder(domain, isSpaApplication, folderPath);
         if (deployRequest == null)
             throw new Error("Invalid deploy params");
 

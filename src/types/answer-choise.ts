@@ -3,6 +3,7 @@ export interface Answer {
     apiKey?: string;
     deployLocation?: string;
     deployProjectId?: string;
+    isSpaApplication?: boolean;
 }
 
 export enum SupportedCommands {

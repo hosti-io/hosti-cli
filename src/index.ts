@@ -69,6 +69,10 @@ export async function cliCommand(defaultDeployCommand?: boolean) {
             projectId: {
                 describe: 'Project id on hosti',
                 type: 'string'
+            },
+            isSpaApplication: {
+                describe: 'Specify if your website is using one of the SPA frameworks (such as React, Vue, Angular), overwise your internal JS routings will not work',
+                type: 'boolean'
             }
         },
         handler: async function (argv) {
@@ -76,7 +80,8 @@ export async function cliCommand(defaultDeployCommand?: boolean) {
             await cliCommandsExecuter.executeCommand({
                 command: SupportedCommands.DEPLOY_SITE,
                 deployLocation: argv.location as string,
-                deployProjectId: argv.projectId as string
+                deployProjectId: argv.projectId as string,
+                isSpaApplication: argv.isSpaApplication as boolean
             });
         }
     })
